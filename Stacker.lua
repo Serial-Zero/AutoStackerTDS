@@ -11,7 +11,6 @@ local function fetchTroops()
             table.insert(t, i)
         end
     end
-    table.insert(t, "") -- Dummy item to fix dropdown bug
     return t
 end
 
