@@ -1145,7 +1145,48 @@ function Update:Window(Config)
 			UIListLayout.Padding = UDim.new(0, 1);
 			UIPadding.Parent = DropScroll;
 			UIPadding.PaddingLeft = UDim.new(0, 5);
-			for i, v in next, option do
+			local function updateCanvas()
+				DropScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y);
+			end;
+			local function setActive(value, fireCallback)
+				if value == nil then
+					return;
+				end;
+				activeItem = tostring(value);
+				SelectItems.Text = "   " .. activeItem;
+				for i, v in next, DropScroll:GetChildren() do
+					if v:IsA("TextButton") then
+						local SelectedItems = v:FindFirstChild("SelectedItems");
+						if activeItem == v.Text then
+							v.BackgroundTransparency = 0.8;
+							v.TextTransparency = 0;
+							if SelectedItems then
+								SelectedItems.BackgroundTransparency = 0;
+							end;
+						else
+							v.BackgroundTransparency = 1;
+							v.TextTransparency = 0.5;
+							if SelectedItems then
+								SelectedItems.BackgroundTransparency = 1;
+							end;
+						end;
+					end;
+				end;
+				if fireCallback then
+					pcall(callback, activeItem);
+				end;
+			end;
+			local function clearItems()
+				SelectItems.Text = "   Select Items";
+				activeItem = nil;
+				for i, v in next, DropScroll:GetChildren() do
+					if v:IsA("TextButton") then
+						v:Destroy();
+					end;
+				end;
+				updateCanvas();
+			end;
+			local function addItem(value)
 				local Item = Instance.new("TextButton");
 				local CRNRitems = Instance.new("UICorner");
 				local UICorner_5 = Instance.new("UICorner");
@@ -1156,7 +1197,7 @@ function Update:Window(Config)
 				Item.BackgroundTransparency = 1;
 				Item.Size = UDim2.new(1, 0, 0, 30);
 				Item.Font = Enum.Font.Nunito;
-				Item.Text = tostring(v);
+				Item.Text = tostring(value);
 				Item.TextColor3 = Color3.fromRGB(255, 255, 255);
 				Item.TextSize = 13;
 				Item.TextTransparency = 0.5;
@@ -1177,49 +1218,26 @@ function Update:Window(Config)
 				SelectedItems.ZIndex = 4;
 				CRNRitems.Parent = SelectedItems;
 				CRNRitems.CornerRadius = UDim.new(0, 999);
-				if var then
-					pcall(callback, var);
-					SelectItems.Text = "   " .. var;
-					activeItem = tostring(var);
-					for i, v in next, DropScroll:GetChildren() do
-						if v:IsA("TextButton") then
-							local SelectedItems = v:FindFirstChild("SelectedItems");
-							if activeItem == v.Text then
-								v.BackgroundTransparency = 0.8;
-								v.TextTransparency = 0;
-								if SelectedItems then
-									SelectedItems.BackgroundTransparency = 0;
-								end;
-							end;
-						end;
-					end;
-				end;
 				Item.MouseButton1Click:Connect(function()
 					SelectItems.ClipsDescendants = true;
-					callback(Item.Text);
-					activeItem = Item.Text;
-					for i, v in next, DropScroll:GetChildren() do
-						if v:IsA("TextButton") then
-							local SelectedItems = v:FindFirstChild("SelectedItems");
-							if activeItem == v.Text then
-								v.BackgroundTransparency = 0.8;
-								v.TextTransparency = 0;
-								if SelectedItems then
-									SelectedItems.BackgroundTransparency = 0;
-								end;
-							else
-								v.BackgroundTransparency = 1;
-								v.TextTransparency = 0.5;
-								if SelectedItems then
-									SelectedItems.BackgroundTransparency = 1;
-								end;
-							end;
-						end;
-					end;
-					SelectItems.Text = "   " .. Item.Text;
+					setActive(Item.Text, true);
 				end);
+				updateCanvas();
 			end;
-			DropScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y);
+			local function rebuildItems(items, selected)
+				clearItems();
+				for _, v in ipairs(items) do
+					addItem(v);
+				end;
+				if selected ~= nil then
+					setActive(selected, false);
+				elseif activeItem ~= nil then
+					setActive(activeItem, false);
+				end;
+			end;
+			if type(option) == "table" then
+				rebuildItems(option, var);
+			end;
 			SelectItems.MouseButton1Click:Connect(function()
 				if isdropping == false then
 					isdropping = true;
@@ -1249,107 +1267,18 @@ function Update:Window(Config)
 			end);
 			local dropfunc = {};
 			function dropfunc:Add(t)
-				local Item = Instance.new("TextButton");
-				local CRNRitems = Instance.new("UICorner");
-				local UICorner_5 = Instance.new("UICorner");
-				local ItemPadding = Instance.new("UIPadding");
-				Item.Name = "Item";
-				Item.Parent = DropScroll;
-				Item.BackgroundColor3 = _G.Primary;
-				Item.BackgroundTransparency = 1;
-				Item.Size = UDim2.new(1, 0, 0, 30);
-				Item.Font = Enum.Font.Nunito;
-				Item.Text = tostring(t);
-				Item.TextColor3 = Color3.fromRGB(255, 255, 255);
-				Item.TextSize = 13;
-				Item.TextTransparency = 0.5;
-				Item.TextXAlignment = Enum.TextXAlignment.Left;
-				Item.ZIndex = 4;
-				ItemPadding.Parent = Item;
-				ItemPadding.PaddingLeft = UDim.new(0, 8);
-				UICorner_5.Parent = Item;
-				UICorner_5.CornerRadius = UDim.new(0, 5);
-				local SelectedItems = Instance.new("Frame");
-				SelectedItems.Name = "SelectedItems";
-				SelectedItems.Parent = Item;
-				SelectedItems.BackgroundColor3 = _G.Third;
-				SelectedItems.BackgroundTransparency = 1;
-				SelectedItems.Size = UDim2.new(0, 3, 0.4, 0);
-				SelectedItems.Position = UDim2.new(0, -8, 0.5, 0);
-				SelectedItems.AnchorPoint = Vector2.new(0, 0.5);
-				SelectedItems.ZIndex = 4;
-				CRNRitems.Parent = SelectedItems;
-				CRNRitems.CornerRadius = UDim.new(0, 999);
-				Item.MouseButton1Click:Connect(function()
-					callback(Item.Text);
-					activeItem = Item.Text;
-					for i, v in next, DropScroll:GetChildren() do
-						if v:IsA("TextButton") then
-							local SelectedItems = v:FindFirstChild("SelectedItems");
-							if activeItem == v.Text then
-								v.BackgroundTransparency = 0.8;
-								v.TextTransparency = 0;
-								if SelectedItems then
-									SelectedItems.BackgroundTransparency = 0;
-								end;
-							else
-								v.BackgroundTransparency = 1;
-								v.TextTransparency = 0.5;
-								if SelectedItems then
-									SelectedItems.BackgroundTransparency = 1;
-								end;
-							end;
-						end;
-					end;
-					SelectItems.Text = "   " .. Item.Text;
-				end);
-				DropScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y);
+				addItem(t);
 			end;
 			function dropfunc:Select(value)
-				if value == nil then
-					return;
-				end;
-				activeItem = tostring(value);
-				SelectItems.Text = "   " .. activeItem;
-				for i, v in next, DropScroll:GetChildren() do
-					if v:IsA("TextButton") then
-						local SelectedItems = v:FindFirstChild("SelectedItems");
-						if activeItem == v.Text then
-							v.BackgroundTransparency = 0.8;
-							v.TextTransparency = 0;
-							if SelectedItems then
-								SelectedItems.BackgroundTransparency = 0;
-							end;
-						else
-							v.BackgroundTransparency = 1;
-							v.TextTransparency = 0.5;
-							if SelectedItems then
-								SelectedItems.BackgroundTransparency = 1;
-							end;
-						end;
-					end;
-				end;
+				setActive(value, false);
 			end;
 			function dropfunc:Clear()
-				SelectItems.Text = "   Select Items";
 				isdropping = false;
 				DropdownFrameScroll.Visible = false;
-				for i, v in next, DropScroll:GetChildren() do
-					if v:IsA("TextButton") then
-						v:Destroy();
-					end;
-				end;
-				activeItem = nil;
-				DropScroll.CanvasSize = UDim2.new(0, 0, 0, 0);
+				clearItems();
 			end;
 			function dropfunc:Refresh(items, selected)
-				self:Clear();
-				for _, item in ipairs(items) do
-					self:Add(item);
-				end;
-				if selected then
-					self:Select(selected);
-				end;
+				rebuildItems(items, selected);
 			end;
 			return dropfunc;
 		end;
