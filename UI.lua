@@ -1180,10 +1180,11 @@ function Update:Window(Config)
 				SelectItems.Text = "   Select Items";
 				activeItem = nil;
 				for i, v in next, DropScroll:GetChildren() do
-					if v:IsA("TextButton") then
+					if v ~= UIListLayout and v ~= UIPadding and v ~= PaddingDrop then
 						v:Destroy();
 					end;
 				end;
+				DropScroll.CanvasPosition = Vector2.new(0, 0);
 				updateCanvas();
 			end;
 			local function addItem(value)
@@ -1226,6 +1227,7 @@ function Update:Window(Config)
 			end;
 			local function rebuildItems(items, selected)
 				clearItems();
+				items = items or {};
 				for _, v in ipairs(items) do
 					addItem(v);
 				end;
@@ -1234,6 +1236,7 @@ function Update:Window(Config)
 				elseif activeItem ~= nil then
 					setActive(activeItem, false);
 				end;
+				task.defer(updateCanvas);
 			end;
 			if type(option) == "table" then
 				rebuildItems(option, var);
