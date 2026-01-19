@@ -1303,6 +1303,32 @@ function Update:Window(Config)
 					end;
 					SelectItems.Text = "   " .. Item.Text;
 				end);
+				DropScroll.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y);
+			end;
+			function dropfunc:Select(value)
+				if value == nil then
+					return;
+				end;
+				activeItem = tostring(value);
+				SelectItems.Text = "   " .. activeItem;
+				for i, v in next, DropScroll:GetChildren() do
+					if v:IsA("TextButton") then
+						local SelectedItems = v:FindFirstChild("SelectedItems");
+						if activeItem == v.Text then
+							v.BackgroundTransparency = 0.8;
+							v.TextTransparency = 0;
+							if SelectedItems then
+								SelectedItems.BackgroundTransparency = 0;
+							end;
+						else
+							v.BackgroundTransparency = 1;
+							v.TextTransparency = 0.5;
+							if SelectedItems then
+								SelectedItems.BackgroundTransparency = 1;
+							end;
+						end;
+					end;
+				end;
 			end;
 			function dropfunc:Clear()
 				SelectItems.Text = "   Select Items";
@@ -1312,6 +1338,17 @@ function Update:Window(Config)
 					if v:IsA("TextButton") then
 						v:Destroy();
 					end;
+				end;
+				activeItem = nil;
+				DropScroll.CanvasSize = UDim2.new(0, 0, 0, 0);
+			end;
+			function dropfunc:Refresh(items, selected)
+				self:Clear();
+				for _, item in ipairs(items) do
+					self:Add(item);
+				end;
+				if selected then
+					self:Select(selected);
 				end;
 			end;
 			return dropfunc;
